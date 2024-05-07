@@ -52,23 +52,42 @@ class MqttSpbTopic:
 
         self.topic = topic_str
 
-        self.namespace = topic_fields[0]
-        self.group_name = topic_fields[1]
-        self.message_type = topic_fields[2]
-        self.eon_name = None
-        self.eon_device_name = None
+        #if rabbitmq sparkplug
+        if topic_fields[0] + '.' + topic_fields[1] == "spBv1.0":
+            self.namespace = topic_fields[0] + '.' + topic_fields[1]
+            self.group_name = topic_fields[2]
+            self.message_type = topic_fields[3]
+            self.eon_name = None
+            self.eon_device_name = None
+            
+            # If EoN
+            if len(topic_fields) > 4:
+                self.eon_name = topic_fields[4]
+                self.entity_name = self.eon_name
 
-        self.entity_name = None
+            # If EoN device type
+            if len(topic_fields) > 5:
+                self.eon_device_name = topic_fields[5]
+                self.entity_name = self.eon_device_name
+                
+        else:
+            self.namespace = topic_fields[0]
+            self.group_name = topic_fields[1]
+            self.message_type = topic_fields[2]
+            self.eon_name = None
+            self.eon_device_name = None
 
-        # If EoN
-        if len(topic_fields) > 3:
-            self.eon_name = topic_fields[3]
-            self.entity_name = self.eon_name
+            self.entity_name = None
 
-        # If EoN device type
-        if len(topic_fields) > 4:
-            self.eon_device_name = topic_fields[4]
-            self.entity_name = self.eon_device_name
+            # If EoN
+            if len(topic_fields) > 3:
+                self.eon_name = topic_fields[3]
+                self.entity_name = self.eon_name
+
+            # If EoN device type
+            if len(topic_fields) > 4:
+                self.eon_device_name = topic_fields[4]
+                self.entity_name = self.eon_device_name
 
         self.domain = "%s.%s.%s" % ( self.namespace, self.group_name, self.eon_name)
         if self.eon_device_name is not None:
@@ -556,7 +575,7 @@ class MqttSpbEntity:
         if self._loopback_topic == msg.topic:
                 return
 
-        msg_ts_rx = int(datetime.datetime.utcnow().timestamp() * 1000)  # Save the current timestamp
+        msg_ts_rx = int(datetime.datetime.now().timestamp() * 1000)  # Save the current timestamp
 
         logger.info("%s - Message received  %s" % (self._entity_domain, msg.topic))
 
@@ -635,7 +654,7 @@ class MqttSpbEntity:
             self.name = name
             self._value = value
             if timestamp is None:
-                self._timestamp = int(datetime.datetime.utcnow().timestamp() * 1000)
+                self._timestamp = int(datetime.datetime.now().timestamp() * 1000)
             else:
                 self._timestamp = timestamp
             self.is_updated = True
@@ -677,7 +696,7 @@ class MqttSpbEntity:
                 self._timestamp = int(value)
 
         def timestamp_update(self):
-            self.timestamp = int(datetime.datetime.utcnow().timestamp() * 1000)
+            self.timestamp = int(datetime.datetime.now().timestamp() * 1000)
 
     class _ValuesGroup:
 
